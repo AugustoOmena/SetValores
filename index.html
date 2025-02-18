@@ -3,140 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Requisições</title>
+    <title>Enviar Email Automático</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .container {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        input {
-            padding: 8px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 10px;
-            width: 200px;
-        }
-
-        button {
-            padding: 8px 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        .message {
+            text-align: center;
+            color: #333;
+            font-family: Arial, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-        }
-
-        .loading {
-            display: none;
-            margin: 10px 0;
-            color: #666;
+        .message.show {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gerenciador de Valores</h1>
-        
-        <div class="input-group">
-            <input type="text" id="valueInput" placeholder="Digite um valor">
-            <button onclick="updateValue()">Atualizar Valor</button>
-        </div>
-
-        <div class="loading" id="loading">Carregando...</div>
-        
-        <div class="result">
-            <h3>Valor Atual:</h3>
-            <p id="currentValue">Carregando...</p>
-        </div>
-    </div>
+    <div id="message" class="message">Email enviado com sucesso!</div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbysTyqDDmUheV-Sc4N2-PaHtbJDVedhp7QDWKfOkYpEd2_xRQ0zPMIvXhI1CpdruYS-YA/exec"; // Substitua pela URL do Apps Script
-        
-        // Função para mostrar/esconder o indicador de carregamento
-        function toggleLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
+        // Inicializa o EmailJS
+        (function() {
+            emailjs.init("ksbcVb1WWMFgOU69x");
+        })();
 
-        // Função para fazer a requisição GET
-        async function getValue() {
-            try {
-                toggleLoading(true);
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                document.getElementById('currentValue').textContent = data.value;
-            } catch (error) {
-                console.error('Erro ao obter valor:', error);
-                document.getElementById('currentValue').textContent = 'Erro ao carregar o valor';
-            } finally {
-                toggleLoading(false);
-            }
-        }
+        document.body.addEventListener('click', function() {
+            // Parâmetros do email
+            const templateParams = {
+                to_email: "endersonfogassalima@gmail.com",
+                message: `
+                <p>Esperamos que seu dia tenha sido tranquilo. Gostaríamos de saber como você está se sentindo e se há algo em que possamos ajudar.</p>
+                <p>Por isso, criamos um breve formulário para você compartilhar um pouco sobre seu dia e seu bem-estar.</p>
+                <p>Se precisar de apoio ou quiser conversar, estamos aqui para ouvir. Sua opinião e seu bem-estar são muito importantes para nós.</p>
+                <p>📌 <a href="https://docs.google.com/forms/d/e/1FAIpQLScbo-xXXNnQh61JI5rr-GG7C8qNdpFap6Xq0ggx9gsTEYosqw/viewform?usp=header" target="_blank">Responda agora</a></p>
+                <p>Aguardamos sua resposta. Cuide-se!</p>
+                <p><strong>Atenciosamente,</strong>Equipe Projeto Integrador</p>`
+        };
 
-        // Função para fazer a requisição POST
-        async function updateValue() {
-            const newValue = document.getElementById('valueInput').value;
-            if (!newValue) {
-                alert('Por favor, digite um valor');
-                return;
-            }
-
-            try {
-                toggleLoading(true);
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: newValue,
-                    headers: {
-                        "Content-Type": "text/plain"
-                    }
+            // Envia o email
+            emailjs.send('service_0z6fysc', 'template_jhksi9r', templateParams)
+                .then(function(response) {
+                    console.log('Email enviado!', response.status, response.text);
+                    const message = document.getElementById('message');
+                    message.classList.add('show');
+                    setTimeout(() => {
+                        message.classList.remove('show');
+                    }, 3000);
+                }, function(error) {
+                    console.log('Erro:', error);
                 });
-
-                if (response.ok) {
-                    const result = await response.text();
-                    document.getElementById("response").innerText = "Sucesso: " + result;
-                    await getValue(); 
-                } else {
-                    throw new Error("Erro na requisição: " + response.statusText);
-                }
-            } catch (error) {
-                console.error("Erro ao atualizar:", error);
-                document.getElementById("response").innerText = "Erro ao atualizar.";
-            } finally {
-                toggleLoading(false);
-                getValue();
-            }
-        }
-
-        // Carrega o valor inicial ao carregar a página
-        getValue();
+        });
     </script>
 </body>
 </html>
