@@ -2,46 +2,142 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Enviar Email Automático</title>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: white;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        body {
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
         }
 
         .message {
-            text-align: center;
-            color: #333;
-            font-family: Arial, sans-serif;
+            position: fixed;
+            top: min(5vh, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: clamp(10px, 3vw, 20px) clamp(15px, 4vw, 30px);
+            border-radius: 999px;
+            font-family: system-ui, -apple-system, sans-serif;
+            z-index: 100;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.3s ease;
+            font-size: clamp(14px, 3vw, 16px);
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
         }
 
         .message.show {
             opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @media (orientation: portrait) {
+            .background-image {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        @media (orientation: landscape) {
+            .background-image {
+                width: auto;
+                height: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .message {
+                width: min(90%, 400px);
+                text-align: center;
+            }
+        }
+
+        @media (hover: hover) {
+            body:hover {
+                cursor: pointer;
+            }
+        }
+
+        @supports (-webkit-touch-callout: none) {
+            .image-container {
+                height: -webkit-fill-available;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="image-container">
+        <img src="./imagempass.webp" alt="Imagem Central" class="background-image">
+    </div>
     <div id="message" class="message">Email enviado com sucesso!</div>
 
     <script>
+        // Previne comportamentos indesejados em dispositivos móveis
+        document.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
         // Inicializa o EmailJS
         (function() {
             emailjs.init("ksbcVb1WWMFgOU69x");
         })();
 
-        document.body.addEventListener('click', function() {
-            // Parâmetros do email
+        // Função para debounce do clique
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Handler do clique com debounce
+        const handleClick = debounce(function() {
             const templateParams = {
                 to_email: "endersonfogassalima@gmail.com",
                 message: `
@@ -51,9 +147,8 @@
                 <p>📌 <a href="https://docs.google.com/forms/d/e/1FAIpQLScbo-xXXNnQh61JI5rr-GG7C8qNdpFap6Xq0ggx9gsTEYosqw/viewform?usp=header" target="_blank">Responda agora</a></p>
                 <p>Aguardamos sua resposta. Cuide-se!</p>
                 <p><strong>Atenciosamente,</strong>Equipe Projeto Integrador</p>`
-        };
+            };
 
-            // Envia o email
             emailjs.send('service_0z6fysc', 'template_jhksi9r', templateParams)
                 .then(function(response) {
                     console.log('Email enviado!', response.status, response.text);
@@ -65,7 +160,10 @@
                 }, function(error) {
                     console.log('Erro:', error);
                 });
-        });
+        }, 300);
+
+        document.body.addEventListener('click', handleClick);
+        document.body.addEventListener('touchend', handleClick);
     </script>
 </body>
 </html>
